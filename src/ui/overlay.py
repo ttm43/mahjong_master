@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, pyqtSlot
 from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 
 class OverlayWindow(QMainWindow):
@@ -23,6 +23,7 @@ class OverlayWindow(QMainWindow):
         
         self.detections = []
         
+    @pyqtSlot(list)
     def update_detections(self, detections):
         """
         detections: list of dicts {"box": [x1, y1, x2, y2], "label": str}
