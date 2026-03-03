@@ -103,8 +103,8 @@ class VisionWorker(QThread):
         self.wait()
 
 
-def main():
-    cfg = load_app_config()
+def main(config_path=None):
+    cfg = load_app_config(config_path=config_path)
     logger = configure_logging(
         level=cfg.log_level,
         log_file=cfg.log_file,

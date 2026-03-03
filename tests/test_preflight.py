@@ -40,3 +40,16 @@ def test_preflight_report_returns_warning_for_missing_models_only(tmp_path):
     assert report["issues"] == []
     assert len(report["warnings"]) == 2
     assert report["dependencies"]["missing"] == []
+
+
+def test_preflight_report_uses_config_path(tmp_path):
+    cfg_file = tmp_path / "app.yaml"
+    cfg_file.write_text("fps: 0\n", encoding="utf-8")
+
+    report = run_preflight_report(
+        config_path=cfg_file,
+        dependency_probe=lambda name: (True, "x.y"),
+        capture_validator=lambda _: None,
+    )
+
+    assert "MAHJONG_PIPELINE_FPS must be > 0" in report["issues"]

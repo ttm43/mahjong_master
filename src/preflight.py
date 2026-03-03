@@ -36,8 +36,8 @@ def _default_capture_validator(cfg):
         capturer.sct.close()
 
 
-def run_preflight_report(config=None, dependency_probe=None, capture_validator=None):
-    cfg = load_app_config() if config is None else config
+def run_preflight_report(config=None, config_path=None, dependency_probe=None, capture_validator=None):
+    cfg = load_app_config(config_path=config_path) if config is None else config
     dependency_probe = _default_dependency_probe if dependency_probe is None else dependency_probe
     capture_validator = _default_capture_validator if capture_validator is None else capture_validator
 
@@ -90,6 +90,6 @@ def run_preflight_report(config=None, dependency_probe=None, capture_validator=N
     }
 
 
-def run_preflight_checks():
-    report = run_preflight_report()
+def run_preflight_checks(config_path=None):
+    report = run_preflight_report(config_path=config_path)
     return report["issues"], report["warnings"]

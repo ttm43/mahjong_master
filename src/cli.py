@@ -37,8 +37,10 @@ def main(argv=None):
     )
     subparsers = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser("run", help="Run realtime overlay pipeline")
+    run_parser = subparsers.add_parser("run", help="Run realtime overlay pipeline")
+    run_parser.add_argument("--config", help="Path to app config file")
     preflight_parser = subparsers.add_parser("preflight", help="Validate runtime prerequisites")
+    preflight_parser.add_argument("--config", help="Path to app config file")
     preflight_parser.add_argument("--json", action="store_true", help="Output preflight report as JSON")
 
     collect_parser = subparsers.add_parser("collect-data", help="Data collection placeholder")
@@ -56,16 +58,16 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     if args.command == "run":
-        run_app()
+        run_app(config_path=args.config)
         return 0
 
     if args.command == "preflight":
         if args.json:
-            report = run_preflight_report()
+            report = run_preflight_report(config_path=args.config)
             print(json.dumps(report, ensure_ascii=False))
             return 3 if report["issues"] else 0
 
-        issues, warnings = run_preflight_checks()
+        issues, warnings = run_preflight_checks(config_path=args.config)
         if warnings:
             print("Preflight completed with warnings:")
             for warning in warnings:

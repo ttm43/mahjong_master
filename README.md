@@ -29,6 +29,12 @@ pip install -r requirements.txt
 python -m src.cli run
 ```
 
+Run with explicit config file:
+
+```bash
+python -m src.cli run --config configs/app.yaml
+```
+
 ## Preflight
 
 Validate monitor/config/model prerequisites before runtime:
@@ -41,6 +47,12 @@ Machine-readable report:
 
 ```bash
 python -m src.cli preflight --json
+```
+
+Use explicit config file for preflight:
+
+```bash
+python -m src.cli preflight --config configs/app.yaml
 ```
 
 The JSON report includes `issues`, `warnings`, dependency versions/missing modules, and effective runtime config.

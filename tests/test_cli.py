@@ -6,7 +6,7 @@ from src import cli
 def test_cli_run_dispatches_to_main(monkeypatch):
     calls = {"count": 0}
 
-    def _fake_main():
+    def _fake_main(config_path=None):
         calls["count"] += 1
 
     monkeypatch.setattr("src.cli.run_app", _fake_main)
@@ -112,7 +112,7 @@ def test_cli_help_mentions_exit_codes(capsys):
 
 
 def test_cli_preflight_success(monkeypatch, capsys):
-    monkeypatch.setattr("src.cli.run_preflight_checks", lambda: ([], ["w1"]))
+    monkeypatch.setattr("src.cli.run_preflight_checks", lambda config_path=None: ([], ["w1"]))
 
     exit_code = cli.main(["preflight"])
     captured = capsys.readouterr()
@@ -122,7 +122,7 @@ def test_cli_preflight_success(monkeypatch, capsys):
 
 
 def test_cli_preflight_failure(monkeypatch, capsys):
-    monkeypatch.setattr("src.cli.run_preflight_checks", lambda: (["e1"], ["w1"]))
+    monkeypatch.setattr("src.cli.run_preflight_checks", lambda config_path=None: (["e1"], ["w1"]))
 
     exit_code = cli.main(["preflight"])
     captured = capsys.readouterr()
@@ -134,7 +134,7 @@ def test_cli_preflight_failure(monkeypatch, capsys):
 def test_cli_preflight_json_success(monkeypatch, capsys):
     monkeypatch.setattr(
         "src.cli.run_preflight_report",
-        lambda: {"issues": [], "warnings": ["w1"], "dependencies": {"missing": []}},
+        lambda config_path=None: {"issues": [], "warnings": ["w1"], "dependencies": {"missing": []}},
     )
 
     exit_code = cli.main(["preflight", "--json"])
@@ -149,7 +149,7 @@ def test_cli_preflight_json_success(monkeypatch, capsys):
 def test_cli_preflight_json_failure(monkeypatch, capsys):
     monkeypatch.setattr(
         "src.cli.run_preflight_report",
-        lambda: {"issues": ["e1"], "warnings": [], "dependencies": {"missing": ["torch"]}},
+        lambda config_path=None: {"issues": ["e1"], "warnings": [], "dependencies": {"missing": ["torch"]}},
     )
 
     exit_code = cli.main(["preflight", "--json"])
@@ -159,3 +159,35 @@ def test_cli_preflight_json_failure(monkeypatch, capsys):
 
     assert exit_code == 3
     assert payload["issues"] == ["e1"]
+
+
+def test_cli_run_passes_config_path(monkeypatch, tmp_path):
+    calls = {"path": None}
+
+    def _fake_main(config_path=None):
+        calls["path"] = config_path
+
+    monkeypatch.setattr("src.cli.run_app", _fake_main)
+    cfg_path = tmp_path / "custom.yaml"
+
+    exit_code = cli.main(["run", "--config", str(cfg_path)])
+
+    assert exit_code == 0
+    assert calls["path"] == str(cfg_path)
+
+
+def test_cli_preflight_json_passes_config_path(monkeypatch, capsys, tmp_path):
+    calls = {"path": None}
+
+    def _fake_report(config_path=None):
+        calls["path"] = config_path
+        return {"issues": [], "warnings": [], "dependencies": {"missing": []}}
+
+    monkeypatch.setattr("src.cli.run_preflight_report", _fake_report)
+    cfg_path = tmp_path / "custom.yaml"
+
+    exit_code = cli.main(["preflight", "--json", "--config", str(cfg_path)])
+    _ = capsys.readouterr()
+
+    assert exit_code == 0
+    assert calls["path"] == str(cfg_path)
