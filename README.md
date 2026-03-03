@@ -23,10 +23,22 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+Install package (editable) with dev tooling:
+
+```bash
+pip install -e .[dev]
+```
+
 ## Run
 
 ```bash
 python -m src.cli run
+```
+
+After package install, you can also run:
+
+```bash
+mahjong-master run
 ```
 
 Run with explicit config file:
@@ -99,7 +111,10 @@ python -m src.cli train-models --check --workspace .
 - `MAHJONG_MONITOR_INDEX` (default: `1`)
 - `MAHJONG_HAND_ROI_HEIGHT` (default: `200`)
 - `MAHJONG_LOG_LEVEL` (default: `INFO`)
+- `MAHJONG_LOG_FORMAT` (`text` or `json`, default: `text`)
 - `MAHJONG_LOG_FILE` (optional, example: `logs/app.log`)
+- `MAHJONG_LOG_ROTATE_BYTES` (default: `1048576`)
+- `MAHJONG_LOG_BACKUP_COUNT` (default: `3`)
 
 ## Optional Config File
 
@@ -112,7 +127,10 @@ hand_roi_height: 200
 detector_model_path: models/tile_detector.pt
 classifier_model_path: models/tile_classifier.pt
 log_level: INFO
+log_format: text
 log_file: logs/app.log
+log_rotate_bytes: 1048576
+log_backup_count: 3
 ```
 
 Environment variables override config file values.
@@ -128,3 +146,15 @@ Environment variables override config file values.
 
 - Overlay displays startup/runtime status text, including missing model warnings.
 - If model files are missing, runtime continues in placeholder mode.
+
+## Quality Checks
+
+Local checks:
+
+```bash
+ruff check src tests
+mypy src
+pytest -q
+```
+
+CI runs the same checks on `push`/`pull_request` via [.github/workflows/ci.yml](c:/Users/46025/work/mahjong_master/.github/workflows/ci.yml).

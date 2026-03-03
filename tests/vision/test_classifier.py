@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from src.vision.classifier import TileClassifier
 
 def test_classifier():

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from src.core.pipeline import TileTracker, calculate_iou
 
 def test_iou_calculation():

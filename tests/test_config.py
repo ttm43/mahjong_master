@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from src.config import load_app_config
 
 

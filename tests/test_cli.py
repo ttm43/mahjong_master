@@ -1,6 +1,4 @@
-﻿import pytest
-
-from src import cli
+﻿from src import cli
 
 
 def test_cli_run_dispatches_to_main(monkeypatch):
@@ -215,3 +213,4 @@ def test_cli_preflight_json_passes_config_path(monkeypatch, capsys, tmp_path):
 
     assert exit_code == 0
     assert calls["path"] == str(cfg_path)
+
