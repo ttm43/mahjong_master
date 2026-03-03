@@ -72,6 +72,24 @@ python -m src.cli train-models --check --workspace .
 - `MAHJONG_PIPELINE_FPS` (default: `10`)
 - `MAHJONG_MONITOR_INDEX` (default: `1`)
 - `MAHJONG_HAND_ROI_HEIGHT` (default: `200`)
+- `MAHJONG_LOG_LEVEL` (default: `INFO`)
+- `MAHJONG_LOG_FILE` (optional, example: `logs/app.log`)
+
+## Optional Config File
+
+You can place runtime config in `configs/app.yaml` (simple `key: value` format):
+
+```yaml
+fps: 10
+monitor_index: 1
+hand_roi_height: 200
+detector_model_path: models/tile_detector.pt
+classifier_model_path: models/tile_classifier.pt
+log_level: INFO
+log_file: logs/app.log
+```
+
+Environment variables override config file values.
 
 ## CLI Exit Codes
 

@@ -3,6 +3,7 @@ import torch
 import torchvision.transforms as T
 from torchvision.models import mobilenet_v3_small
 from pathlib import Path
+from src.app_logging import get_logger
 
 class TileClassifier:
     TILE_CLASSES = [
@@ -13,6 +14,7 @@ class TileClassifier:
     ]
     
     def __init__(self, model_path, device='cpu'):
+        self.logger = get_logger("classifier")
         self.device = torch.device(device)
         self.model = mobilenet_v3_small(num_classes=34)
         self.weights_loaded = False
@@ -24,9 +26,13 @@ class TileClassifier:
                 self.model.load_state_dict(torch.load(path, map_location=self.device))
                 self.weights_loaded = True
             else:
-                print(f"Warning: classifier weights not found at {model_path}. Using random initialization.")
+                self.logger.warning("Classifier weights not found at %s. Using random initialization.", model_path)
         except Exception as exc:
-            print(f"Warning: failed to load classifier weights at {model_path}: {exc}. Using random initialization.")
+            self.logger.warning(
+                "Failed to load classifier weights at %s: %s. Using random initialization.",
+                model_path,
+                exc,
+            )
             
         self.model.to(self.device)
         self.model.eval()

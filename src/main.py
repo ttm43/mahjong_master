@@ -1,11 +1,11 @@
-﻿import os
-import sys
+﻿import sys
 import time
-from pathlib import Path
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 
+from src.app_logging import configure_logging, get_logger
+from src.config import load_app_config, resolve_path
 from src.core.capture import ScreenCapturer
 from src.core.pipeline import TileTracker
 from src.ui.overlay import OverlayWindow
@@ -13,25 +13,26 @@ from src.vision.classifier import TileClassifier
 from src.vision.detector import TileDetector
 
 
-def _resolve_model_path(env_var, default_rel_path):
-    configured = os.getenv(env_var)
-    if configured:
-        return str(Path(configured).expanduser().resolve())
-    return str((Path.cwd() / default_rel_path).resolve())
-
-
 class VisionWorker(QThread):
     # Signal payload: [{"box": [x1, y1, x2, y2], "label": str}]
     update_signal = pyqtSignal(list)
     status_signal = pyqtSignal(str)
 
-    def __init__(self, fps=10, monitor_index=1, hand_roi_height=200):
+    def __init__(
+        self,
+        fps=10,
+        monitor_index=1,
+        hand_roi_height=200,
+        detector_model_path="models/tile_detector.pt",
+        classifier_model_path="models/tile_classifier.pt",
+    ):
         super().__init__()
+        self.logger = get_logger("worker")
         self.fps = max(1, int(fps))
         self.running = True
 
-        self.detector_model_path = _resolve_model_path("MAHJONG_DETECTOR_MODEL", "models/tile_detector.pt")
-        self.classifier_model_path = _resolve_model_path("MAHJONG_CLASSIFIER_MODEL", "models/tile_classifier.pt")
+        self.detector_model_path = resolve_path(detector_model_path)
+        self.classifier_model_path = resolve_path(classifier_model_path)
 
         self.capturer = ScreenCapturer(monitor_index=monitor_index, hand_roi_height=hand_roi_height)
         self.detector = TileDetector(self.detector_model_path, allow_missing_model=True)
@@ -62,6 +63,7 @@ class VisionWorker(QThread):
                 try:
                     raw_boxes = self.detector.detect(roi)
                 except Exception as exc:
+                    self.logger.warning("Detector inference failed: %s", exc)
                     self.status_signal.emit(f"Detector inference failed: {exc}")
                     raw_boxes = []
 
@@ -90,6 +92,7 @@ class VisionWorker(QThread):
 
                 self.update_signal.emit(final_detections)
             except Exception as exc:
+                self.logger.exception("Pipeline error")
                 self.status_signal.emit(f"Pipeline error: {exc}")
 
             elapsed = time.time() - start_t
@@ -101,25 +104,32 @@ class VisionWorker(QThread):
 
 
 def main():
+    cfg = load_app_config()
+    logger = configure_logging(level=cfg.log_level, log_file=cfg.log_file)
+
     app = QApplication.instance() or QApplication(sys.argv)
 
     overlay = OverlayWindow()
     overlay.show()
 
-    fps = int(os.getenv("MAHJONG_PIPELINE_FPS", "10"))
-    monitor_index = int(os.getenv("MAHJONG_MONITOR_INDEX", "1"))
-    hand_roi_height = int(os.getenv("MAHJONG_HAND_ROI_HEIGHT", "200"))
-
-    worker = VisionWorker(fps=fps, monitor_index=monitor_index, hand_roi_height=hand_roi_height)
+    worker = VisionWorker(
+        fps=cfg.fps,
+        monitor_index=cfg.monitor_index,
+        hand_roi_height=cfg.hand_roi_height,
+        detector_model_path=cfg.detector_model_path,
+        classifier_model_path=cfg.classifier_model_path,
+    )
     worker.update_signal.connect(overlay.update_detections)
     worker.status_signal.connect(overlay.update_status)
     overlay.update_status(worker.get_startup_status())
     worker.start()
 
+    logger.info("Application started")
     try:
         exit_code = app.exec_()
     finally:
         worker.stop()
+        logger.info("Application stopped")
 
     sys.exit(exit_code)
 

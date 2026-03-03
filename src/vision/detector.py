@@ -1,8 +1,10 @@
 from pathlib import Path
 from ultralytics import YOLO
+from src.app_logging import get_logger
 
 class TileDetector:
     def __init__(self, model_path, allow_missing_model=False):
+        self.logger = get_logger("detector")
         self.model_path = str(model_path)
         self.model = None
         self.is_loaded = False
@@ -14,7 +16,7 @@ class TileDetector:
             return
 
         if allow_missing_model:
-            print(f"Warning: detector model not found at {self.model_path}. Detection will return empty results.")
+            self.logger.warning("Detector model not found at %s. Detection will return empty results.", self.model_path)
             return
 
         self.model = YOLO(self.model_path)
