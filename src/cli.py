@@ -1,4 +1,5 @@
 ﻿import argparse
+import json
 
 from src.main import main as run_app
 from src.ml.placeholders import (
@@ -9,7 +10,7 @@ from src.ml.placeholders import (
     run_data_collection,
     run_model_training,
 )
-from src.preflight import run_preflight_checks
+from src.preflight import run_preflight_checks, run_preflight_report
 
 
 def _print_missing(prefix, missing):
@@ -37,7 +38,8 @@ def main(argv=None):
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("run", help="Run realtime overlay pipeline")
-    subparsers.add_parser("preflight", help="Validate runtime prerequisites")
+    preflight_parser = subparsers.add_parser("preflight", help="Validate runtime prerequisites")
+    preflight_parser.add_argument("--json", action="store_true", help="Output preflight report as JSON")
 
     collect_parser = subparsers.add_parser("collect-data", help="Data collection placeholder")
     collect_parser.add_argument("--workspace", default=".", help="Workspace root for generated files")
@@ -58,6 +60,11 @@ def main(argv=None):
         return 0
 
     if args.command == "preflight":
+        if args.json:
+            report = run_preflight_report()
+            print(json.dumps(report, ensure_ascii=False))
+            return 3 if report["issues"] else 0
+
         issues, warnings = run_preflight_checks()
         if warnings:
             print("Preflight completed with warnings:")

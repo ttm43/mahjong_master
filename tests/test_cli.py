@@ -129,3 +129,33 @@ def test_cli_preflight_failure(monkeypatch, capsys):
 
     assert exit_code == 3
     assert "Preflight failed" in captured.out
+
+
+def test_cli_preflight_json_success(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "src.cli.run_preflight_report",
+        lambda: {"issues": [], "warnings": ["w1"], "dependencies": {"missing": []}},
+    )
+
+    exit_code = cli.main(["preflight", "--json"])
+    captured = capsys.readouterr()
+    json_mod = __import__("json")
+    payload = json_mod.loads(captured.out)
+
+    assert exit_code == 0
+    assert payload["warnings"] == ["w1"]
+
+
+def test_cli_preflight_json_failure(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "src.cli.run_preflight_report",
+        lambda: {"issues": ["e1"], "warnings": [], "dependencies": {"missing": ["torch"]}},
+    )
+
+    exit_code = cli.main(["preflight", "--json"])
+    captured = capsys.readouterr()
+    json_mod = __import__("json")
+    payload = json_mod.loads(captured.out)
+
+    assert exit_code == 3
+    assert payload["issues"] == ["e1"]

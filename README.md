@@ -37,6 +37,14 @@ Validate monitor/config/model prerequisites before runtime:
 python -m src.cli preflight
 ```
 
+Machine-readable report:
+
+```bash
+python -m src.cli preflight --json
+```
+
+The JSON report includes `issues`, `warnings`, dependency versions/missing modules, and effective runtime config.
+
 ## Scaffold Commands
 
 Initialize data workspace layout:
