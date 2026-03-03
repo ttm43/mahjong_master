@@ -42,6 +42,7 @@ def main(argv=None):
     preflight_parser = subparsers.add_parser("preflight", help="Validate runtime prerequisites")
     preflight_parser.add_argument("--config", help="Path to app config file")
     preflight_parser.add_argument("--json", action="store_true", help="Output preflight report as JSON")
+    preflight_parser.add_argument("--strict", action="store_true", help="Treat warnings as failures")
 
     collect_parser = subparsers.add_parser("collect-data", help="Data collection placeholder")
     collect_parser.add_argument("--workspace", default=".", help="Workspace root for generated files")
@@ -62,20 +63,31 @@ def main(argv=None):
         return 0
 
     if args.command == "preflight":
+        def _preflight_failed(report):
+            if report["issues"]:
+                return True
+            if args.strict and report["warnings"]:
+                return True
+            return False
+
         if args.json:
             report = run_preflight_report(config_path=args.config)
             print(json.dumps(report, ensure_ascii=False))
-            return 3 if report["issues"] else 0
+            return 3 if _preflight_failed(report) else 0
 
         issues, warnings = run_preflight_checks(config_path=args.config)
         if warnings:
             print("Preflight completed with warnings:")
             for warning in warnings:
                 print(f"- {warning}")
+            if args.strict and not issues:
+                print("Preflight strict mode failed on warnings")
         if issues:
             print("Preflight failed:")
             for issue in issues:
                 print(f"- {issue}")
+            return 3
+        if args.strict and warnings:
             return 3
         if not warnings:
             print("Preflight completed successfully")

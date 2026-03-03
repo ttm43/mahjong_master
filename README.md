@@ -55,6 +55,12 @@ Use explicit config file for preflight:
 python -m src.cli preflight --config configs/app.yaml
 ```
 
+Strict mode (warnings also fail with exit code `3`):
+
+```bash
+python -m src.cli preflight --strict
+```
+
 The JSON report includes `issues`, `warnings`, dependency versions/missing modules, and effective runtime config.
 
 ## Scaffold Commands

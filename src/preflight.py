@@ -72,7 +72,10 @@ def run_preflight_report(config=None, config_path=None, dependency_probe=None, c
     except Exception as exc:
         issues.append(f"Monitor validation failed: {exc}")
 
+    status = "error" if issues else ("warning" if warnings else "ok")
+
     return {
+        "status": status,
         "issues": issues,
         "warnings": warnings,
         "dependencies": {

@@ -161,6 +161,30 @@ def test_cli_preflight_json_failure(monkeypatch, capsys):
     assert payload["issues"] == ["e1"]
 
 
+def test_cli_preflight_strict_fails_on_warning(monkeypatch, capsys):
+    monkeypatch.setattr("src.cli.run_preflight_checks", lambda config_path=None: ([], ["w1"]))
+
+    exit_code = cli.main(["preflight", "--strict"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 3
+    assert "Preflight strict mode failed on warnings" in captured.out
+
+
+def test_cli_preflight_json_strict_fails_on_warning(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "src.cli.run_preflight_report",
+        lambda config_path=None: {"issues": [], "warnings": ["w1"], "dependencies": {"missing": []}},
+    )
+
+    exit_code = cli.main(["preflight", "--json", "--strict"])
+    captured = capsys.readouterr()
+    payload = __import__("json").loads(captured.out)
+
+    assert exit_code == 3
+    assert payload["warnings"] == ["w1"]
+
+
 def test_cli_run_passes_config_path(monkeypatch, tmp_path):
     calls = {"path": None}
 
