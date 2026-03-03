@@ -2,6 +2,7 @@ import cv2
 import torch
 import torchvision.transforms as T
 from torchvision.models import mobilenet_v3_small
+from pathlib import Path
 
 class TileClassifier:
     TILE_CLASSES = [
@@ -14,12 +15,18 @@ class TileClassifier:
     def __init__(self, model_path, device='cpu'):
         self.device = torch.device(device)
         self.model = mobilenet_v3_small(num_classes=34)
+        self.weights_loaded = False
         
-        # Load weights gracefully if they exist, else allow model to be random
+        # Load weights gracefully if they exist; otherwise keep random initialization.
         try:
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-        except FileNotFoundError:
-            print(f"Warning: model weights not found at {model_path}. Using random initialization.")
+            path = Path(model_path)
+            if path.exists():
+                self.model.load_state_dict(torch.load(path, map_location=self.device))
+                self.weights_loaded = True
+            else:
+                print(f"Warning: classifier weights not found at {model_path}. Using random initialization.")
+        except Exception as exc:
+            print(f"Warning: failed to load classifier weights at {model_path}: {exc}. Using random initialization.")
             
         self.model.to(self.device)
         self.model.eval()
