@@ -11,7 +11,10 @@ class AppConfig:
     detector_model_path: str = "models/tile_detector.pt"
     classifier_model_path: str = "models/tile_classifier.pt"
     log_level: str = "INFO"
+    log_format: str = "text"
     log_file: str | None = None
+    log_rotate_bytes: int = 1048576
+    log_backup_count: int = 3
 
 
 def _parse_scalar(value):
@@ -71,8 +74,14 @@ def load_app_config(config_path=None, env=None):
         cfg.classifier_model_path = str(file_cfg["classifier_model"])
     if "log_level" in file_cfg:
         cfg.log_level = str(file_cfg["log_level"]).upper()
+    if "log_format" in file_cfg:
+        cfg.log_format = str(file_cfg["log_format"]).lower()
     if "log_file" in file_cfg:
         cfg.log_file = str(file_cfg["log_file"]) if file_cfg["log_file"] is not None else None
+    if "log_rotate_bytes" in file_cfg:
+        cfg.log_rotate_bytes = int(file_cfg["log_rotate_bytes"])
+    if "log_backup_count" in file_cfg:
+        cfg.log_backup_count = int(file_cfg["log_backup_count"])
 
     # env overrides
     if "MAHJONG_PIPELINE_FPS" in env:
@@ -87,8 +96,14 @@ def load_app_config(config_path=None, env=None):
         cfg.classifier_model_path = str(env["MAHJONG_CLASSIFIER_MODEL"])
     if "MAHJONG_LOG_LEVEL" in env:
         cfg.log_level = str(env["MAHJONG_LOG_LEVEL"]).upper()
+    if "MAHJONG_LOG_FORMAT" in env:
+        cfg.log_format = str(env["MAHJONG_LOG_FORMAT"]).lower()
     if "MAHJONG_LOG_FILE" in env:
         cfg.log_file = str(env["MAHJONG_LOG_FILE"])
+    if "MAHJONG_LOG_ROTATE_BYTES" in env:
+        cfg.log_rotate_bytes = int(env["MAHJONG_LOG_ROTATE_BYTES"])
+    if "MAHJONG_LOG_BACKUP_COUNT" in env:
+        cfg.log_backup_count = int(env["MAHJONG_LOG_BACKUP_COUNT"])
 
     return cfg
 

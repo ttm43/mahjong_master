@@ -105,7 +105,13 @@ class VisionWorker(QThread):
 
 def main():
     cfg = load_app_config()
-    logger = configure_logging(level=cfg.log_level, log_file=cfg.log_file)
+    logger = configure_logging(
+        level=cfg.log_level,
+        log_file=cfg.log_file,
+        log_format=cfg.log_format,
+        rotate_bytes=cfg.log_rotate_bytes,
+        backup_count=cfg.log_backup_count,
+    )
 
     app = QApplication.instance() or QApplication(sys.argv)
 
